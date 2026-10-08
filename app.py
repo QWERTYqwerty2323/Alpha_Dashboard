@@ -1,5 +1,5 @@
 import warnings
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 from datetime import date, timedelta
 from math import sqrt
@@ -14,7 +14,8 @@ import yfinance as yf
 
 
 # ============================================================
-# ALPHA — DYNAMIC PORTFOLIO INTELLIGENCE & STRATEGY
+# ALPHA
+# DYNAMIC PORTFOLIO INTELLIGENCE & STRATEGY DASHBOARD
 # ============================================================
 
 st.set_page_config(
@@ -37,11 +38,9 @@ DEFAULT_BENCHMARK = "^NSEI"
 
 NETWORK_TIMEOUT = 8
 
-BROKERAGE_RATE = 0.0025
-
 
 # ============================================================
-# DEFAULT 15-STOCK UNIVERSE
+# DEFAULT STOCK UNIVERSE
 # ============================================================
 
 DEFAULT_COMPANIES = [
@@ -64,71 +63,78 @@ DEFAULT_COMPANIES = [
 
 
 # ============================================================
-# COMPANY METADATA
+# COMPANY INFORMATION
 # ============================================================
 
 META = {
-
-    "BAJAJ-AUTO.NS":
-        ("Bajaj Auto Ltd", "Automobiles"),
-
-    "MARUTI.NS":
-        ("Maruti Suzuki India Ltd", "Automobiles"),
-
-    "M&M.NS":
-        ("Mahindra & Mahindra Ltd", "Automobiles"),
-
-    "HAL.NS":
-        ("Hindustan Aeronautics Ltd", "Defense / Capital Goods"),
-
-    "POLYCAB.NS":
-        ("Polycab India Ltd", "Capital Goods / Manufacturing"),
-
-    "SIEMENS.NS":
-        ("Siemens Ltd", "Capital Goods"),
-
-    "PIDILITIND.NS":
-        ("Pidilite Industries Ltd", "Chemicals"),
-
-    "SOLARINDS.NS":
-        ("Solar Industries India Ltd", "Chemicals / Defense"),
-
-    "PIIND.NS":
-        ("PI Industries Ltd", "Chemicals"),
-
-    "BRITANNIA.NS":
-        ("Britannia Industries Ltd", "FMCG"),
-
-    "HINDUNILVR.NS":
-        ("Hindustan Unilever Ltd", "FMCG"),
-
-    "ITC.NS":
-        ("ITC Ltd", "FMCG"),
-
-    "AXISBANK.NS":
-        ("Axis Bank Ltd", "Financials"),
-
-    "BSE.NS":
-        ("BSE Ltd", "Capital Markets"),
-
-    "ANGELONE.NS":
-        ("Angel One Ltd", "Financial Services"),
+    "BAJAJ-AUTO.NS": (
+        "Bajaj Auto Ltd",
+        "Automobiles"
+    ),
+    "MARUTI.NS": (
+        "Maruti Suzuki India Ltd",
+        "Automobiles"
+    ),
+    "M&M.NS": (
+        "Mahindra & Mahindra Ltd",
+        "Automobiles"
+    ),
+    "HAL.NS": (
+        "Hindustan Aeronautics Ltd",
+        "Defense / Capital Goods"
+    ),
+    "POLYCAB.NS": (
+        "Polycab India Ltd",
+        "Capital Goods / Manufacturing"
+    ),
+    "SIEMENS.NS": (
+        "Siemens Ltd",
+        "Capital Goods"
+    ),
+    "PIDILITIND.NS": (
+        "Pidilite Industries Ltd",
+        "Chemicals"
+    ),
+    "SOLARINDS.NS": (
+        "Solar Industries India Ltd",
+        "Chemicals / Defense"
+    ),
+    "PIIND.NS": (
+        "PI Industries Ltd",
+        "Chemicals"
+    ),
+    "BRITANNIA.NS": (
+        "Britannia Industries Ltd",
+        "FMCG"
+    ),
+    "HINDUNILVR.NS": (
+        "Hindustan Unilever Ltd",
+        "FMCG"
+    ),
+    "ITC.NS": (
+        "ITC Ltd",
+        "FMCG"
+    ),
+    "AXISBANK.NS": (
+        "Axis Bank Ltd",
+        "Financials"
+    ),
+    "BSE.NS": (
+        "BSE Ltd",
+        "Capital Markets"
+    ),
+    "ANGELONE.NS": (
+        "Angel One Ltd",
+        "Financial Services"
+    ),
 }
 
 
 # ============================================================
 # PEER GROUPS
 # ============================================================
-#
-# These peer groups are used for the relative P/E calculation:
-#
-# Relative P/E =
-# Company P/E / Median P/E of Peer Group
-#
-# ============================================================
 
 PEER_GROUP = {
-
     "BAJAJ-AUTO.NS": "Automobiles",
     "MARUTI.NS": "Automobiles",
     "M&M.NS": "Automobiles",
@@ -158,34 +164,28 @@ PEER_GROUP = {
 PERSONAS = {
 
     "Conservative": {
-
         "valuation": 0.40,
         "risk": 0.40,
         "momentum": 0.10,
         "quality": 0.10,
-
         "max_holdings": 8,
         "max_weight": 0.18,
     },
 
     "Balanced": {
-
         "valuation": 0.30,
         "risk": 0.25,
         "momentum": 0.25,
         "quality": 0.20,
-
         "max_holdings": 10,
         "max_weight": 0.15,
     },
 
     "Aggressive": {
-
         "valuation": 0.25,
         "risk": 0.15,
         "momentum": 0.40,
         "quality": 0.20,
-
         "max_holdings": 12,
         "max_weight": 0.13,
     },
@@ -241,93 +241,68 @@ st.session_state.setdefault(
 # BASIC HELPERS
 # ============================================================
 
-def inr(x):
-
-    if x is None or pd.isna(x):
-        return "-"
-
-    x = float(x)
-
-    negative = x < 0
-
-    x = abs(x)
-
-    s = f"{x:,.2f}"
-
-    a, b = s.split(".")
-
-    if len(a) <= 3:
-
-        grouped = a
-
-    else:
-
-        last3 = a[-3:]
-        rest = a[:-3]
-
-        parts = []
-
-        while len(rest) > 2:
-
-            parts.insert(0, rest[-2:])
-            rest = rest[:-2]
-
-        if rest:
-            parts.insert(0, rest)
-
-        grouped = ",".join(parts) + "," + last3
-
-    result = "₹" + grouped + "." + b
-
-    if negative:
-        result = "-" + result
-
-    return result
-
-
-def pct(x):
-
-    if x is None or pd.isna(x):
-        return "-"
-
-    return f"{float(x):+.2f}%"
-
-
-def name(ticker):
-
+def company_name(ticker):
     return META.get(
         ticker,
         (ticker, "Other")
     )[0]
 
 
-def sector(ticker):
-
+def company_sector(ticker):
     return META.get(
         ticker,
         (ticker, "Other")
     )[1]
 
 
-def peer(ticker):
-
+def company_peer(ticker):
     return PEER_GROUP.get(
         ticker,
-        sector(ticker)
+        company_sector(ticker)
     )
+
+
+def format_inr(value):
+
+    if value is None or pd.isna(value):
+        return "-"
+
+    value = float(value)
+
+    negative = value < 0
+    value = abs(value)
+
+    text = f"{value:,.2f}"
+
+    if negative:
+        return "-₹" + text
+
+    return "₹" + text
+
+
+def format_pct(value):
+
+    if value is None or pd.isna(value):
+        return "-"
+
+    return f"{float(value):+.2f}%"
 
 
 # ============================================================
 # NETWORK TIMEOUT
 # ============================================================
 
-def bounded(fn, timeout=NETWORK_TIMEOUT):
+def bounded(function, timeout=NETWORK_TIMEOUT):
 
     try:
 
-        with cf.ThreadPoolExecutor(max_workers=1) as executor:
+        with cf.ThreadPoolExecutor(
+            max_workers=1
+        ) as executor:
 
-            return executor.submit(fn).result(
+            return executor.submit(
+                function
+            ).result(
                 timeout=timeout
             )
 
@@ -337,65 +312,76 @@ def bounded(fn, timeout=NETWORK_TIMEOUT):
 
 
 # ============================================================
-# YAHOO FINANCE HISTORY
+# YAHOO FINANCE DATA
 # ============================================================
 
 @st.cache_data(
     ttl=900,
     show_spinner=False
 )
-def history(ticker):
+def get_history(ticker):
 
-    def call():
+    def download():
 
-        h = yf.Ticker(ticker).history(
+        try:
 
-            start=(
-                INVESTMENT_DATE -
-                timedelta(days=400)
-            ).strftime("%Y-%m-%d"),
+            data = yf.Ticker(
+                ticker
+            ).history(
+                start=(
+                    INVESTMENT_DATE -
+                    timedelta(days=400)
+                ).strftime("%Y-%m-%d"),
 
-            end=(
-                pd.Timestamp.today() +
-                timedelta(days=1)
-            ).strftime("%Y-%m-%d"),
+                end=(
+                    pd.Timestamp.today() +
+                    timedelta(days=1)
+                ).strftime("%Y-%m-%d"),
 
-            auto_adjust=False,
+                auto_adjust=False,
 
-            timeout=NETWORK_TIMEOUT
-        )
+                timeout=NETWORK_TIMEOUT
+            )
 
-        if isinstance(h, pd.DataFrame):
+            if isinstance(
+                data,
+                pd.DataFrame
+            ):
 
-            return h
+                return data
+
+        except Exception:
+            pass
 
         return pd.DataFrame()
 
-    result = bounded(call)
+    result = bounded(download)
 
-    if isinstance(result, pd.DataFrame):
+    if isinstance(
+        result,
+        pd.DataFrame
+    ):
 
         return result
 
     return pd.DataFrame()
 
 
-# ============================================================
-# YAHOO FINANCE FUNDAMENTALS
-# ============================================================
-
 @st.cache_data(
     ttl=1800,
     show_spinner=False
 )
-def info(ticker):
+def get_info(ticker):
 
     result = bounded(
         lambda: yf.Ticker(ticker).info,
         6
     )
 
-    if isinstance(result, dict):
+    if isinstance(
+        result,
+        dict
+    ):
 
         return result
 
@@ -403,106 +389,123 @@ def info(ticker):
 
 
 # ============================================================
-# BENCHMARK DATA
+# PRICE SERIES
 # ============================================================
 
-@st.cache_data(
-    ttl=900,
-    show_spinner=False
-)
-def benchmark_history(ticker):
-
-    return history(ticker)
-
-
-# ============================================================
-# CLEAN PRICE SERIES
-# ============================================================
-
-def clean_series(
+def price_series(
     ticker,
     column="Close"
 ):
 
-    h = history(ticker)
+    data = get_history(ticker)
 
-    if h.empty:
+    if data.empty:
+        return pd.Series(
+            dtype=float
+        )
 
-        return pd.Series(dtype=float)
+    if column not in data.columns:
+        return pd.Series(
+            dtype=float
+        )
 
-    if column not in h:
+    series = data[column].dropna()
 
-        return pd.Series(dtype=float)
+    if series.empty:
+        return pd.Series(
+            dtype=float
+        )
 
-    s = h[column].dropna()
+    index = pd.DatetimeIndex(
+        pd.to_datetime(
+            series.index
+        )
+    )
 
-    s.index = pd.DatetimeIndex(
-        pd.to_datetime(s.index)
-    ).tz_localize(None)
+    # Remove timezone safely.
+    if index.tz is not None:
+        index = index.tz_localize(None)
 
-    return s
+    series.index = index
+
+    return series
 
 
 # ============================================================
-# PRICE HELPERS
+# PRICE FUNCTIONS
 # ============================================================
 
 def price_on_or_before(
     ticker,
-    when
+    selected_date
 ):
 
-    s = clean_series(ticker)
+    series = price_series(
+        ticker
+    )
 
-    if s.empty:
-
+    if series.empty:
         return np.nan
 
-    s = s[
-        s.index <= pd.Timestamp(when)
+    selected_date = pd.Timestamp(
+        selected_date
+    )
+
+    series = series[
+        series.index <= selected_date
     ]
 
-    if len(s) == 0:
-
+    if series.empty:
         return np.nan
 
-    return float(s.iloc[-1])
+    return float(
+        series.iloc[-1]
+    )
 
 
 def entry_price(ticker):
 
-    s = clean_series(ticker)
+    series = price_series(
+        ticker
+    )
 
-    s = s[
-        s.index >= INVESTMENT_DATE
+    series = series[
+        series.index >=
+        INVESTMENT_DATE
     ]
 
-    if len(s) == 0:
-
+    if series.empty:
         return np.nan
 
-    return float(s.iloc[0])
+    return float(
+        series.iloc[0]
+    )
 
 
 def latest_price(ticker):
 
-    s = clean_series(ticker)
+    series = price_series(
+        ticker
+    )
 
-    if len(s) == 0:
-
+    if series.empty:
         return np.nan
 
-    return float(s.iloc[-1])
+    return float(
+        series.iloc[-1]
+    )
 
 
 def selected_price(
     ticker,
-    selected_date
+    selected_date=None
 ):
 
     if selected_date is None:
 
-        return latest_price(ticker)
+        return latest_price(
+            ticker
+        )
 
     return price_on_or_before(
         ticker,
@@ -511,62 +514,111 @@ def selected_price(
 
 
 # ============================================================
+# IMPORTANT FIX:
 # WEEKLY REPORT DATES
 # ============================================================
 
 def report_dates():
 
-    s = clean_series(
+    series = price_series(
         st.session_state.benchmark
     )
 
-    s = s[
-        s.index >= INVESTMENT_DATE
-    ]
-
-    if s.empty:
-
+    if series.empty:
         return []
 
-    grouped = pd.Series(
-        s.index,
-        index=s.index
-    ).groupby(
-        s.index.to_period("W-FRI")
-    ).max()
+    series = series[
+        series.index >=
+        INVESTMENT_DATE
+    ]
 
-    return list(grouped.values)
+    if series.empty:
+        return []
+
+    # Group by trading week and take
+    # the LAST AVAILABLE TRADING DAY.
+    grouped = (
+        pd.Series(
+            series.index,
+            index=series.index
+        )
+        .groupby(
+            series.index.to_period(
+                "W-FRI"
+            )
+        )
+        .max()
+    )
+
+    # IMPORTANT:
+    # Convert every returned date to pd.Timestamp.
+    # This prevents:
+    #
+    # AttributeError:
+    # 'numpy.datetime64' object has no attribute 'strftime'
+    #
+    dates = []
+
+    for value in grouped.tolist():
+
+        try:
+
+            dates.append(
+                pd.Timestamp(value)
+            )
+
+        except Exception:
+
+            continue
+
+    dates = sorted(
+        list(
+            set(dates)
+        )
+    )
+
+    return dates
 
 
 # ============================================================
-# BETA CALCULATION
+# BETA
 # ============================================================
 
-def beta_at(
+def calculate_beta(
     ticker,
     asof=None,
     window=252
 ):
 
-    stock = clean_series(ticker)
+    stock = price_series(
+        ticker
+    )
 
-    benchmark = clean_series(
+    benchmark = price_series(
         st.session_state.benchmark
     )
 
     if asof is not None:
 
+        asof = pd.Timestamp(
+            asof
+        )
+
         stock = stock[
-            stock.index <= pd.Timestamp(asof)
+            stock.index <= asof
         ]
 
         benchmark = benchmark[
-            benchmark.index <= pd.Timestamp(asof)
+            benchmark.index <= asof
         ]
 
-    stock_returns = stock.pct_change()
+    stock_returns = (
+        stock.pct_change()
+    )
 
-    benchmark_returns = benchmark.pct_change()
+    benchmark_returns = (
+        benchmark.pct_change()
+    )
 
     combined = pd.concat(
         [
@@ -577,10 +629,11 @@ def beta_at(
         join="inner"
     ).dropna()
 
-    combined = combined.tail(window)
+    combined = combined.tail(
+        window
+    )
 
     if len(combined) < 30:
-
         return np.nan
 
     benchmark_variance = (
@@ -588,59 +641,68 @@ def beta_at(
     )
 
     if benchmark_variance == 0:
-
         return np.nan
 
-    return float(
+    beta = (
         combined.iloc[:, 0].cov(
             combined.iloc[:, 1]
-        ) /
+        )
+        /
         benchmark_variance
     )
+
+    return float(beta)
 
 
 # ============================================================
 # MOMENTUM
 # ============================================================
 
-def return_at(
+def calculate_return(
     ticker,
     asof=None,
     days=126
 ):
 
-    s = clean_series(ticker)
+    series = price_series(
+        ticker
+    )
 
     if asof is not None:
 
-        s = s[
-            s.index <= pd.Timestamp(asof)
+        series = series[
+            series.index <=
+            pd.Timestamp(asof)
         ]
 
-    if len(s) <= days:
-
+    if len(series) <= days:
         return np.nan
 
     return float(
-        s.iloc[-1] /
-        s.iloc[-days-1] -
-        1
+        series.iloc[-1]
+        /
+        series.iloc[-days - 1]
+        - 1
     )
 
 
 # ============================================================
-# PEER-RELATIVE P/E
+# PEER RELATIVE VALUATION
 # ============================================================
 
-def valuation_data(companies):
+def valuation_table(
+    companies
+):
 
     raw = []
 
     for ticker in companies:
 
-        inf = info(ticker)
+        fundamentals = get_info(
+            ticker
+        )
 
-        pe = inf.get(
+        pe = fundamentals.get(
             "trailingPE"
         )
 
@@ -677,19 +739,26 @@ def valuation_data(companies):
             if (
                 other_ticker != ticker
                 and
-                peer(other_ticker) == peer(ticker)
+                company_peer(
+                    other_ticker
+                )
+                ==
+                company_peer(
+                    ticker
+                )
                 and
                 pd.notna(value)
                 and
                 0 < value < 200
             )
-
         ]
 
         if peer_values:
 
             peer_median = float(
-                np.median(peer_values)
+                np.median(
+                    peer_values
+                )
             )
 
         else:
@@ -705,7 +774,8 @@ def valuation_data(companies):
         ):
 
             relative_pe = (
-                pe / peer_median
+                pe /
+                peer_median
             )
 
         else:
@@ -714,34 +784,39 @@ def valuation_data(companies):
 
         rows.append({
 
-            "Ticker": ticker,
+            "Ticker":
+                ticker,
 
-            "P/E": pe,
+            "P/E":
+                pe,
 
-            "Peer P/E": peer_median,
+            "Peer P/E":
+                peer_median,
 
             "Relative P/E":
                 relative_pe
         })
 
-    return pd.DataFrame(rows)
+    return pd.DataFrame(
+        rows
+    )
 
 
 # ============================================================
 # NORMALIZATION
 # ============================================================
 
-def minmax(
+def normalize(
     series,
     higher_is_better=True
 ):
 
-    s = pd.to_numeric(
+    values = pd.to_numeric(
         series,
         errors="coerce"
     )
 
-    valid = s.dropna()
+    valid = values.dropna()
 
     result = pd.Series(
         np.nan,
@@ -749,8 +824,7 @@ def minmax(
         dtype=float
     )
 
-    if len(valid) == 0:
-
+    if valid.empty:
         return result
 
     low = valid.min()
@@ -791,36 +865,44 @@ def minmax(
 
 def strategy_snapshot(
     companies,
-    persona="Balanced",
+    persona,
     asof=None
 ):
 
-    config = PERSONAS[persona]
+    config = PERSONAS[
+        persona
+    ]
 
-    valuation = valuation_data(
+    valuation = valuation_table(
         companies
     )
 
     rows = []
 
-    for _, row in valuation.iterrows():
+    for _, valuation_row in (
+        valuation.iterrows()
+    ):
 
-        ticker = row["Ticker"]
+        ticker = (
+            valuation_row["Ticker"]
+        )
 
-        beta = beta_at(
+        beta = calculate_beta(
             ticker,
             asof
         )
 
-        momentum = return_at(
+        momentum = calculate_return(
             ticker,
             asof,
             126
         )
 
-        inf = info(ticker)
+        fundamentals = get_info(
+            ticker
+        )
 
-        roe = inf.get(
+        roe = fundamentals.get(
             "returnOnEquity"
         )
 
@@ -842,22 +924,22 @@ def strategy_snapshot(
                 ticker,
 
             "Company":
-                name(ticker),
+                company_name(ticker),
 
             "Sector":
-                sector(ticker),
+                company_sector(ticker),
 
             "Peer Group":
-                peer(ticker),
+                company_peer(ticker),
 
             "P/E":
-                row["P/E"],
+                valuation_row["P/E"],
 
             "Peer P/E":
-                row["Peer P/E"],
+                valuation_row["Peer P/E"],
 
             "Relative P/E":
-                row["Relative P/E"],
+                valuation_row["Relative P/E"],
 
             "Beta":
                 beta,
@@ -866,76 +948,101 @@ def strategy_snapshot(
                 momentum,
 
             "ROE":
-                roe,
+                roe
         })
 
-    data = pd.DataFrame(rows)
+    data = pd.DataFrame(
+        rows
+    )
 
     if data.empty:
-
         return data
 
     # --------------------------------------------------------
     # FACTOR SCORES
     # --------------------------------------------------------
 
-    data["Valuation Score"] = minmax(
+    data[
+        "Valuation Score"
+    ] = normalize(
         data["Relative P/E"],
         higher_is_better=False
     )
 
-    data["Risk Score"] = minmax(
+    data[
+        "Risk Score"
+    ] = normalize(
         data["Beta"],
         higher_is_better=False
     )
 
-    data["Momentum Score"] = minmax(
+    data[
+        "Momentum Score"
+    ] = normalize(
         data["6M Return"],
         higher_is_better=True
     )
 
-    data["Quality Score"] = minmax(
+    data[
+        "Quality Score"
+    ] = normalize(
         data["ROE"],
         higher_is_better=True
     )
 
     # --------------------------------------------------------
-    # PERSONA WEIGHTS
+    # PERSONA WEIGHTED SCORE
     # --------------------------------------------------------
 
-    data["Strategy Score"] = (
+    data[
+        "Strategy Score"
+    ] = (
 
-        data["Valuation Score"].fillna(0.5)
-        * config["valuation"]
-
-        +
-
-        data["Risk Score"].fillna(0.5)
-        * config["risk"]
-
-        +
-
-        data["Momentum Score"].fillna(0.5)
-        * config["momentum"]
+        data[
+            "Valuation Score"
+        ].fillna(0.5)
+        *
+        config["valuation"]
 
         +
 
-        data["Quality Score"].fillna(0.5)
-        * config["quality"]
+        data[
+            "Risk Score"
+        ].fillna(0.5)
+        *
+        config["risk"]
+
+        +
+
+        data[
+            "Momentum Score"
+        ].fillna(0.5)
+        *
+        config["momentum"]
+
+        +
+
+        data[
+            "Quality Score"
+        ].fillna(0.5)
+        *
+        config["quality"]
 
     ) * 100
 
     # --------------------------------------------------------
-    # RANK STOCKS
+    # RANK
     # --------------------------------------------------------
 
     data = data.sort_values(
         "Strategy Score",
         ascending=False
-    ).reset_index(drop=True)
+    ).reset_index(
+        drop=True
+    )
 
     # --------------------------------------------------------
-    # SELECT STOCKS
+    # SELECT
     # --------------------------------------------------------
 
     selected = data.head(
@@ -945,118 +1052,142 @@ def strategy_snapshot(
         )
     ).copy()
 
+    if selected.empty:
+
+        data["Selected"] = False
+        data["New Weight"] = 0.0
+
+        return data
+
     # --------------------------------------------------------
-    # SCORE-PROPORTIONAL WEIGHTS
+    # SCORE PROPORTIONAL WEIGHTS
     # --------------------------------------------------------
 
-    positive_scores = np.maximum(
+    scores = np.maximum(
         selected[
             "Strategy Score"
-        ].fillna(0).values,
+        ]
+        .fillna(0)
+        .values,
+
         0.01
     )
 
     weights = (
-        positive_scores /
-        positive_scores.sum()
+        scores /
+        scores.sum()
     )
 
     max_weight = config[
         "max_weight"
     ]
 
-    # Apply position cap
-    for _ in range(20):
+    # Position cap
+    for _ in range(30):
 
         over_limit = (
-            weights > max_weight
+            weights >
+            max_weight
         )
 
         if not over_limit.any():
-
             break
 
         excess = (
-            weights[over_limit]
-            - max_weight
+            weights[
+                over_limit
+            ]
+            -
+            max_weight
         ).sum()
 
         weights[
             over_limit
         ] = max_weight
 
-        under_limit = ~over_limit
+        under_limit = (
+            ~over_limit
+        )
 
-        if under_limit.any():
+        if (
+            under_limit.any()
+            and
+            weights[
+                under_limit
+            ].sum() > 0
+        ):
 
             weights[
                 under_limit
             ] += (
-                excess *
-                weights[under_limit] /
-                weights[under_limit].sum()
+                excess
+                *
+                weights[
+                    under_limit
+                ]
+                /
+                weights[
+                    under_limit
+                ].sum()
             )
 
-        else:
+    if weights.sum() > 0:
 
-            break
-
-    weights = (
-        weights /
-        weights.sum()
-    )
-
-    selected["New Weight"] = weights
-
-    data["Selected"] = (
-        data["Ticker"].isin(
-            selected["Ticker"]
+        weights = (
+            weights /
+            weights.sum()
         )
-    )
+
+    selected[
+        "New Weight"
+    ] = weights
 
     # --------------------------------------------------------
-    # MERGE WEIGHTS
+    # MERGE BACK
     # --------------------------------------------------------
+
+    data[
+        "Selected"
+    ] = data[
+        "Ticker"
+    ].isin(
+        selected[
+            "Ticker"
+        ]
+    )
 
     data = data.merge(
-
         selected[
             [
                 "Ticker",
                 "New Weight"
             ]
         ],
-
         on="Ticker",
-
         how="left"
     )
 
-    data["New Weight"] = (
-        data["New Weight"]
-        .fillna(0)
-    )
+    data[
+        "New Weight"
+    ] = data[
+        "New Weight"
+    ].fillna(0)
 
-    # --------------------------------------------------------
-    # ACTION
-    # --------------------------------------------------------
-
-    data["Action"] = np.where(
-
+    data[
+        "Action"
+    ] = np.where(
         data["Selected"],
-
         "SELECT / HOLD",
-
         "EXCLUDE"
     )
 
     # --------------------------------------------------------
-    # EXPLAINABLE REASON
+    # EXPLANATION
     # --------------------------------------------------------
 
-    def reason(row):
+    def explanation(row):
 
-        relative_pe = row[
+        rel_pe = row[
             "Relative P/E"
         ]
 
@@ -1065,14 +1196,14 @@ def strategy_snapshot(
         ]
 
         if (
-            pd.notna(relative_pe)
+            pd.notna(rel_pe)
             and
             pd.notna(beta)
         ):
 
             return (
                 f"Relative P/E "
-                f"{relative_pe:.2f}x; "
+                f"{rel_pe:.2f}x | "
                 f"Beta {beta:.2f}"
             )
 
@@ -1081,8 +1212,10 @@ def strategy_snapshot(
             "peer/factor data"
         )
 
-    data["Reason"] = data.apply(
-        reason,
+    data[
+        "Reason"
+    ] = data.apply(
+        explanation,
         axis=1
     )
 
@@ -1090,7 +1223,7 @@ def strategy_snapshot(
 
 
 # ============================================================
-# WEEKLY STRATEGY BACKTEST
+# WEEKLY STRATEGY HISTORY
 # ============================================================
 
 def weekly_strategy_history(
@@ -1100,17 +1233,23 @@ def weekly_strategy_history(
 
     dates = report_dates()
 
-    output = []
+    if len(dates) < 2:
 
-    for i, current_date in enumerate(
-        dates
+        return pd.DataFrame()
+
+    rows = []
+
+    for i in range(
+        len(dates) - 1
     ):
 
-        if i >= len(dates) - 1:
+        current_date = pd.Timestamp(
+            dates[i]
+        )
 
-            break
-
-        next_date = dates[i + 1]
+        next_date = pd.Timestamp(
+            dates[i + 1]
+        )
 
         snapshot = strategy_snapshot(
             companies,
@@ -1119,29 +1258,33 @@ def weekly_strategy_history(
         )
 
         if snapshot.empty:
-
             continue
 
         selected = snapshot[
             snapshot["Selected"]
         ]
 
-        weekly_return = 0
+        if selected.empty:
+            continue
+
+        weekly_return = 0.0
 
         valid = False
 
         for _, row in selected.iterrows():
 
-            ticker = row["Ticker"]
+            ticker = row[
+                "Ticker"
+            ]
 
-            price_start = (
+            start_price = (
                 price_on_or_before(
                     ticker,
                     current_date
                 )
             )
 
-            price_end = (
+            end_price = (
                 price_on_or_before(
                     ticker,
                     next_date
@@ -1149,57 +1292,65 @@ def weekly_strategy_history(
             )
 
             if (
-                pd.notna(price_start)
+                pd.notna(start_price)
                 and
-                pd.notna(price_end)
+                pd.notna(end_price)
+                and
+                start_price > 0
             ):
 
                 stock_return = (
-                    price_end /
-                    price_start -
+                    end_price /
+                    start_price -
                     1
                 )
 
                 weekly_return += (
-                    stock_return *
+                    stock_return
+                    *
                     row["New Weight"]
                 )
 
                 valid = True
 
-        output.append({
+        if valid:
 
-            "Date":
-                current_date,
+            rows.append({
 
-            "Return":
-                weekly_return
-                if valid
-                else np.nan,
+                "Date":
+                    current_date,
 
-            "Holdings":
-                len(selected)
-        })
+                "Next Week":
+                    next_date,
+
+                "Return":
+                    weekly_return,
+
+                "Holdings":
+                    len(selected)
+            })
 
     return pd.DataFrame(
-        output
+        rows
     )
 
 
 # ============================================================
-# BASIC PORTFOLIO ENGINE
+# BASE PORTFOLIO
 # ============================================================
 
-def equal_portfolio(
+def build_portfolio(
     companies,
     asof=None
 ):
 
-    number = len(companies)
-
-    if number == 0:
-
+    if not companies:
         return pd.DataFrame()
+
+    allocation = (
+        TOTAL_CAPITAL /
+        len(companies)
+    )
 
     rows = []
 
@@ -1209,14 +1360,9 @@ def equal_portfolio(
             ticker
         )
 
-        price = selected_price(
+        current = selected_price(
             ticker,
             asof
-        )
-
-        allocation = (
-            TOTAL_CAPITAL /
-            number
         )
 
         if (
@@ -1230,27 +1376,29 @@ def equal_portfolio(
                 entry
             )
 
-        else:
-
-            quantity = 0
-
-        cash = (
-            allocation -
-            quantity * entry
-            if pd.notna(entry)
-            else allocation
-        )
-
-        if pd.notna(price):
-
-            value = (
-                quantity * price +
-                cash
+            leftover = (
+                allocation -
+                quantity *
+                entry
             )
 
         else:
 
-            value = cash
+            quantity = 0
+            leftover = allocation
+
+        if pd.notna(current):
+
+            value = (
+                quantity *
+                current
+                +
+                leftover
+            )
+
+        else:
+
+            value = leftover
 
         rows.append({
 
@@ -1258,10 +1406,10 @@ def equal_portfolio(
                 ticker,
 
             "Company":
-                name(ticker),
+                company_name(ticker),
 
             "Sector":
-                sector(ticker),
+                company_sector(ticker),
 
             "Allocated":
                 allocation,
@@ -1270,37 +1418,51 @@ def equal_portfolio(
                 entry,
 
             "Price":
-                price,
+                current,
 
             "Qty":
                 quantity,
 
             "Cash":
-                cash,
+                leftover,
 
             "Value":
                 value,
 
             "P/L":
-                value - allocation
+                value -
+                allocation
         })
 
     result = pd.DataFrame(
         rows
     )
 
-    if len(result):
+    if (
+        not result.empty
+        and
+        result["Value"].sum() > 0
+    ):
 
-        result["Weight"] = (
-            result["Value"] /
+        result[
+            "Weight"
+        ] = (
+            result["Value"]
+            /
             result["Value"].sum()
         )
+
+    else:
+
+        result[
+            "Weight"
+        ] = 0.0
 
     return result
 
 
 # ============================================================
-# PORTFOLIO HISTORY
+# BASE PORTFOLIO PERFORMANCE
 # ============================================================
 
 def portfolio_series(
@@ -1308,9 +1470,16 @@ def portfolio_series(
     asof=None
 ):
 
-    benchmark = clean_series(
+    benchmark = price_series(
         st.session_state.benchmark
     )
+
+    if benchmark.empty:
+
+        return (
+            pd.Series(dtype=float),
+            pd.Series(dtype=float)
+        )
 
     if asof is not None:
 
@@ -1340,36 +1509,51 @@ def portfolio_series(
 
     weight = (
         1 /
-        max(1, len(companies))
+        max(
+            1,
+            len(companies)
+        )
     )
 
     for ticker in companies:
 
-        stock = clean_series(
+        stock = price_series(
             ticker
         )
+
+        stock = stock[
+            stock.index >=
+            INVESTMENT_DATE
+        ]
 
         stock = stock.reindex(
             index
         ).ffill().bfill()
 
-        if stock.dropna().empty:
+        if stock.empty:
+            continue
 
+        if pd.isna(
+            stock.iloc[0]
+        ):
             continue
 
         portfolio += (
-            weight *
+            weight
+            *
             (
                 stock /
                 stock.iloc[0]
-            ) *
+            )
+            *
             100
         )
 
     benchmark_normalized = (
         benchmark /
         benchmark.iloc[0]
-        * 100
+        *
+        100
     )
 
     return (
@@ -1382,7 +1566,9 @@ def portfolio_series(
 # SIDEBAR
 # ============================================================
 
-st.sidebar.title("α ALPHA")
+st.sidebar.title(
+    "α ALPHA"
+)
 
 st.sidebar.caption(
     "Dynamic Portfolio Intelligence & Strategy"
@@ -1414,12 +1600,17 @@ page = st.sidebar.radio(
 # HEADER
 # ============================================================
 
-st.title("α ALPHA")
+st.title(
+    "α ALPHA"
+)
 
 st.caption(
-    "Dynamic multi-sector portfolio dashboard • "
-    "Investment date: 01 Sep 2026 • "
-    "Target date: 01 Sep 2029"
+    "Dynamic Multi-Sector Portfolio Intelligence & Strategy"
+)
+
+st.caption(
+    "Investment Date: 01 Sep 2026  |  "
+    "Target Date: 01 Sep 2029"
 )
 
 
@@ -1427,60 +1618,78 @@ st.caption(
 # WEEKLY REPORT SELECTOR
 # ============================================================
 
-left, right = st.columns([3, 2])
+left, right = st.columns(
+    [3, 2]
+)
 
 
 with left:
 
-    dates = report_dates()
+    available_dates = report_dates()
 
-    labels = (
-        ["LIVE — Latest Available Data"] +
+    labels = [
+        "LIVE — Latest Available Data"
+    ]
+
+    # FIX:
+    # Every date is converted to pd.Timestamp
+    # before calling strftime.
+
+    labels.extend(
         [
-            d.strftime("%d %b %Y")
-            for d in dates
+            pd.Timestamp(
+                d
+            ).strftime(
+                "%d %b %Y"
+            )
+            for d in available_dates
         ]
     )
 
     current_index = 0
 
     if (
-        st.session_state.mode ==
+        st.session_state.mode
+        ==
         "historical"
         and
         st.session_state.report_date
         is not None
     ):
 
-        target_label = (
+        historical_label = (
             pd.Timestamp(
                 st.session_state.report_date
-            ).strftime("%d %b %Y")
+            ).strftime(
+                "%d %b %Y"
+            )
         )
 
-        if target_label in labels:
+        if historical_label in labels:
 
             current_index = (
                 labels.index(
-                    target_label
+                    historical_label
                 )
             )
 
-    choice = st.selectbox(
-        "Weekly report date",
+    selected_label = st.selectbox(
+        "Weekly Report Date",
         labels,
-        index=current_index,
-        help=(
-            "Select the last available "
-            "trading day of a week."
-        )
+        index=current_index
     )
 
-    if choice.startswith("LIVE"):
+    if selected_label.startswith(
+        "LIVE"
+    ):
 
-        st.session_state.mode = "live"
+        st.session_state.mode = (
+            "live"
+        )
 
-        st.session_state.report_date = None
+        st.session_state.report_date = (
+            None
+        )
 
     else:
 
@@ -1488,28 +1697,35 @@ with left:
             "historical"
         )
 
+        # Convert selected label back
+        # into a proper pandas Timestamp.
+
         st.session_state.report_date = (
-            pd.Timestamp(choice)
+            pd.to_datetime(
+                selected_label,
+                format="%d %b %Y"
+            )
         )
 
     if (
-        st.session_state.mode ==
+        st.session_state.mode
+        ==
         "historical"
     ):
 
-        d = (
+        historical_date = pd.Timestamp(
             st.session_state.report_date
         )
 
         st.markdown(
             f"""
-            **Historical report as on
-            {d:%d %b %Y}**
+            **Historical Report as on
+            {historical_date.strftime("%d %b %Y")}**
 
-            Investment date:
+            Investment Date:
             **01 Sep 2026**
 
-            Target date:
+            Target Date:
             **01 Sep 2029**
             """
         )
@@ -1518,7 +1734,8 @@ with left:
 with right:
 
     if (
-        st.session_state.mode ==
+        st.session_state.mode
+        ==
         "live"
     ):
 
@@ -1528,12 +1745,16 @@ with right:
 
     else:
 
-        st.info(
-            f"""
-            📅 HISTORICAL SNAPSHOT
+        historical_date = pd.Timestamp(
+            st.session_state.report_date
+        )
 
-            {st.session_state.report_date:%d %b %Y}
-            """
+        st.info(
+            "📅 HISTORICAL SNAPSHOT — "
+            +
+            historical_date.strftime(
+                "%d %b %Y"
+            )
         )
 
         if st.button(
@@ -1542,9 +1763,13 @@ with right:
             type="primary"
         ):
 
-            st.session_state.mode = "live"
+            st.session_state.mode = (
+                "live"
+            )
 
-            st.session_state.report_date = None
+            st.session_state.report_date = (
+                None
+            )
 
             st.rerun()
 
@@ -1552,7 +1777,9 @@ with right:
 selected_date = (
     None
     if st.session_state.mode == "live"
-    else st.session_state.report_date
+    else pd.Timestamp(
+        st.session_state.report_date
+    )
 )
 
 
@@ -1560,31 +1787,37 @@ selected_date = (
 # COMMON PORTFOLIO DATA
 # ============================================================
 
-companies = st.session_state.companies
+companies = (
+    st.session_state.companies
+)
 
-portfolio = equal_portfolio(
+portfolio = build_portfolio(
     companies,
     selected_date
 )
 
 current_value = (
-    float(portfolio.Value.sum())
-    if len(portfolio)
+    float(
+        portfolio["Value"].sum()
+    )
+    if not portfolio.empty
     else 0
 )
 
-invested = TOTAL_CAPITAL
+invested_amount = (
+    TOTAL_CAPITAL
+)
 
 profit = (
     current_value -
-    invested
+    invested_amount
 )
 
 portfolio_return = (
     profit /
-    invested *
+    invested_amount *
     100
-    if invested
+    if invested_amount > 0
     else 0
 )
 
@@ -1596,15 +1829,16 @@ portfolio_history, benchmark_history_series = (
 )
 
 benchmark_return = (
-    benchmark_history_series.iloc[-1] -
+    benchmark_history_series.iloc[-1]
+    -
     100
-    if len(benchmark_history_series)
+    if not benchmark_history_series.empty
     else np.nan
 )
 
 
 # ============================================================
-# PAGE 1 — OVERVIEW
+# OVERVIEW
 # ============================================================
 
 if page == "🏠 Overview":
@@ -1613,43 +1847,57 @@ if page == "🏠 Overview":
         "🏠 Investor Overview"
     )
 
-    k = st.columns(5)
+    metrics = st.columns(
+        5
+    )
 
-    k[0].metric(
+    metrics[0].metric(
         "Portfolio Value",
-        inr(current_value)
+        format_inr(
+            current_value
+        )
     )
 
-    k[1].metric(
+    metrics[1].metric(
         "Invested Amount",
-        inr(invested)
+        format_inr(
+            invested_amount
+        )
     )
 
-    k[2].metric(
+    metrics[2].metric(
         "Profit / Loss",
-        inr(profit),
-        pct(portfolio_return)
+        format_inr(
+            profit
+        ),
+        format_pct(
+            portfolio_return
+        )
     )
 
-    k[3].metric(
+    metrics[3].metric(
         "NIFTY 50 Return",
-        pct(benchmark_return)
+        format_pct(
+            benchmark_return
+        )
     )
 
-    k[4].metric(
+    metrics[4].metric(
         "Investor Persona",
         st.session_state.persona
     )
 
     st.subheader(
-        "Portfolio Snapshot"
+        "Portfolio Allocation"
     )
 
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3 = st.columns(
+        3
+    )
 
     with c1:
 
-        if len(portfolio):
+        if not portfolio.empty:
 
             fig = px.pie(
                 portfolio,
@@ -1666,7 +1914,7 @@ if page == "🏠 Overview":
 
     with c2:
 
-        if len(portfolio):
+        if not portfolio.empty:
 
             fig = px.pie(
                 portfolio,
@@ -1683,19 +1931,26 @@ if page == "🏠 Overview":
 
     with c3:
 
-        if len(portfolio):
+        if not portfolio.empty:
 
-            top = portfolio.nlargest(
+            top5 = portfolio.nlargest(
                 5,
                 "Value"
             )
 
-            display = top[
-                ["Company", "Value"]
+            display = top5[
+                [
+                    "Company",
+                    "Value"
+                ]
             ].copy()
 
-            display["Value"] = (
-                display["Value"].map(inr)
+            display[
+                "Value"
+            ] = display[
+                "Value"
+            ].map(
+                format_inr
             )
 
             st.dataframe(
@@ -1705,10 +1960,12 @@ if page == "🏠 Overview":
             )
 
             concentration = (
-                top["Value"].sum() /
-                current_value *
+                top5["Value"].sum()
+                /
+                current_value
+                *
                 100
-                if current_value
+                if current_value > 0
                 else 0
             )
 
@@ -1717,23 +1974,25 @@ if page == "🏠 Overview":
                 f"{concentration:.1f}%"
             )
 
-    if len(portfolio_history):
+    if not portfolio_history.empty:
 
         fig = go.Figure()
 
         fig.add_trace(
             go.Scatter(
                 x=portfolio_history.index,
-                y=portfolio_history,
-                name="ALPHA Base Portfolio"
+                y=portfolio_history.values,
+                name="ALPHA Base Portfolio",
+                mode="lines"
             )
         )
 
         fig.add_trace(
             go.Scatter(
                 x=benchmark_history_series.index,
-                y=benchmark_history_series,
-                name="NIFTY 50"
+                y=benchmark_history_series.values,
+                name="NIFTY 50",
+                mode="lines"
             )
         )
 
@@ -1742,7 +2001,7 @@ if page == "🏠 Overview":
                 "Portfolio Growth vs NIFTY 50 "
                 "(Base = 100)"
             ),
-            height=400
+            height=420
         )
 
         st.plotly_chart(
@@ -1752,7 +2011,7 @@ if page == "🏠 Overview":
 
 
 # ============================================================
-# PAGE 2 — ALPHA STRATEGY ENGINE
+# ALPHA STRATEGY ENGINE
 # ============================================================
 
 elif page == "🧠 ALPHA Strategy Engine":
@@ -1764,8 +2023,6 @@ elif page == "🧠 ALPHA Strategy Engine":
     st.markdown(
         """
         ### Dynamic Portfolio Dashboard & Strategy
-
-        ALPHA uses:
 
         **Investor Persona → Peer-relative P/E →
         Beta-weighted risk screening → Momentum →
@@ -1779,20 +2036,22 @@ elif page == "🧠 ALPHA Strategy Engine":
 
     with p1:
 
+        persona_options = [
+            "Conservative",
+            "Balanced",
+            "Aggressive"
+        ]
+
         persona = st.selectbox(
             "Investor Persona",
-            [
-                "Conservative",
-                "Balanced",
-                "Aggressive"
-            ],
-            index=[
-                "Conservative",
-                "Balanced",
-                "Aggressive"
-            ].index(
+            persona_options,
+            index=persona_options.index(
                 st.session_state.persona
             )
+        )
+
+        st.session_state.persona = (
+            persona
         )
 
     with p2:
@@ -1812,7 +2071,9 @@ elif page == "🧠 ALPHA Strategy Engine":
             """
         )
 
-    st.session_state.persona = persona
+    config = PERSONAS[
+        persona
+    ]
 
     snapshot = strategy_snapshot(
         companies,
@@ -1826,103 +2087,95 @@ elif page == "🧠 ALPHA Strategy Engine":
             "Strategy data is currently unavailable."
         )
 
-        st.stop()
+    else:
 
-    config = PERSONAS[
-        persona
-    ]
+        st.subheader(
+            f"{persona} Strategy — Current Selection"
+        )
 
-    st.subheader(
-        f"{persona} Strategy — Weekly Selection"
-    )
+        k = st.columns(
+            4
+        )
 
-    q = st.columns(4)
+        k[0].metric(
+            "Universe",
+            len(companies)
+        )
 
-    q[0].metric(
-        "Universe",
-        len(companies)
-    )
+        k[1].metric(
+            "Selected Stocks",
+            int(
+                snapshot[
+                    "Selected"
+                ].sum()
+            )
+        )
 
-    q[1].metric(
-        "Selected Stocks",
-        int(snapshot.Selected.sum())
-    )
+        k[2].metric(
+            "Maximum Position",
+            f"{config['max_weight']*100:.0f}%"
+        )
 
-    q[2].metric(
-        "Maximum Position",
-        f"{config['max_weight']*100:.0f}%"
-    )
+        k[3].metric(
+            "Valuation Weight",
+            f"{config['valuation']*100:.0f}%"
+        )
 
-    q[3].metric(
-        "Valuation Weight",
-        f"{config['valuation']*100:.0f}%"
-    )
+        display = snapshot[
+            [
+                "Company",
+                "Ticker",
+                "Sector",
+                "Peer Group",
+                "P/E",
+                "Peer P/E",
+                "Relative P/E",
+                "Beta",
+                "6M Return",
+                "ROE",
+                "Strategy Score",
+                "New Weight",
+                "Action",
+                "Reason"
+            ]
+        ].copy()
 
-    # --------------------------------------------------------
-    # STRATEGY TABLE
-    # --------------------------------------------------------
+        display[
+            "New Weight"
+        ] *= 100
 
-    display = snapshot[
-        [
-            "Company",
-            "Ticker",
-            "Sector",
-            "Peer Group",
-            "P/E",
-            "Peer P/E",
-            "Relative P/E",
-            "Beta",
-            "6M Return",
-            "ROE",
-            "Strategy Score",
-            "New Weight",
-            "Action",
-            "Reason"
+        display[
+            "6M Return"
+        ] *= 100
+
+        display[
+            "ROE"
+        ] *= 100
+
+        display = display.rename(
+            columns={
+                "New Weight":
+                    "Weight %",
+                "6M Return":
+                    "6M Return %",
+                "ROE":
+                    "ROE %"
+            }
+        )
+
+        st.dataframe(
+            display,
+            hide_index=True,
+            use_container_width=True
+        )
+
+        st.subheader(
+            "Why ALPHA Selected These Stocks"
+        )
+
+        selected = snapshot[
+            snapshot["Selected"]
         ]
-    ].copy()
-
-    display["New Weight"] = (
-        display["New Weight"] *
-        100
-    )
-
-    display["6M Return"] = (
-        display["6M Return"] *
-        100
-    )
-
-    display["ROE"] = (
-        display["ROE"] *
-        100
-    )
-
-    display = display.rename(
-        columns={
-            "New Weight": "Weight %",
-            "6M Return": "6M Return %",
-            "ROE": "ROE %"
-        }
-    )
-
-    st.dataframe(
-        display,
-        hide_index=True,
-        use_container_width=True
-    )
-
-    # --------------------------------------------------------
-    # SELECTED STOCKS
-    # --------------------------------------------------------
-
-    st.subheader(
-        "Why ALPHA Selected These Stocks"
-    )
-
-    selected = snapshot[
-        snapshot.Selected
-    ]
-
-    if len(selected):
 
         for _, row in selected.iterrows():
 
@@ -1957,94 +2210,100 @@ elif page == "🧠 ALPHA Strategy Engine":
 
                 • Strategy Score:
                 **{row['Strategy Score']:.1f}**
+
+                • Reason:
+                {row['Reason']}
                 """
             )
 
-    # --------------------------------------------------------
-    # WEEKLY REBALANCING HISTORY
-    # --------------------------------------------------------
+        st.subheader(
+            "🔄 Weekly Rebalancing History"
+        )
 
-    st.subheader(
-        "🔄 Weekly Rebalancing History"
-    )
+        weekly = weekly_strategy_history(
+            companies,
+            persona
+        )
 
-    weekly = weekly_strategy_history(
-        companies,
-        persona
-    )
+        if not weekly.empty:
 
-    if len(weekly):
+            weekly[
+                "Cumulative Return %"
+            ] = (
+                1 +
+                weekly[
+                    "Return"
+                ].fillna(0)
+            ).cumprod().sub(1) * 100
 
-        weekly[
-            "Cumulative Return %"
-        ] = (
-            1 +
-            weekly["Return"].fillna(0)
-        ).cumprod().sub(1) * 100
+            fig = go.Figure()
 
-        fig = go.Figure()
-
-        fig.add_trace(
-            go.Scatter(
-                x=weekly["Date"],
-                y=weekly[
-                    "Cumulative Return %"
-                ],
-                mode="lines+markers",
-                name="ALPHA Strategy"
+            fig.add_trace(
+                go.Scatter(
+                    x=weekly["Date"],
+                    y=weekly[
+                        "Cumulative Return %"
+                    ],
+                    mode="lines+markers",
+                    name="ALPHA Strategy"
+                )
             )
+
+            fig.update_layout(
+                title=(
+                    "Weekly Rebalanced "
+                    "Strategy — Cumulative Return"
+                ),
+                yaxis_title="Return %",
+                height=400
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+            history_display = weekly.copy()
+
+            history_display[
+                "Return"
+            ] *= 100
+
+            history_display = (
+                history_display.rename(
+                    columns={
+                        "Return":
+                            "Weekly Return %"
+                    }
+                )
+            )
+
+            st.dataframe(
+                history_display,
+                hide_index=True,
+                use_container_width=True
+            )
+
+        else:
+
+            st.info(
+                "Weekly backtest requires sufficient market history."
+            )
+
+        st.caption(
+            """
+            Data limitation: Yahoo Finance does not reliably
+            provide point-in-time historical P/E for every
+            Indian stock. ALPHA therefore uses the latest
+            available P/E field for peer-relative valuation,
+            while price, Beta and momentum are calculated
+            as-of the selected weekly date.
+            """
         )
-
-        fig.update_layout(
-            title=(
-                "Weekly Rebalanced "
-                "Strategy — Cumulative Return"
-            ),
-            yaxis_title="Return %",
-            height=380
-        )
-
-        st.plotly_chart(
-            fig,
-            use_container_width=True
-        )
-
-        history_display = weekly.copy()
-
-        history_display["Return"] = (
-            history_display["Return"] *
-            100
-        )
-
-        st.dataframe(
-            history_display,
-            hide_index=True,
-            use_container_width=True
-        )
-
-    else:
-
-        st.info(
-            "Weekly backtest needs sufficient historical observations."
-        )
-
-    # --------------------------------------------------------
-    # METHODOLOGY NOTE
-    # --------------------------------------------------------
-
-    st.caption(
-        """
-        Data note: Yahoo Finance provides current fundamental
-        fields more reliably than historical point-in-time P/E.
-        Therefore ALPHA uses the latest available P/E fields for
-        the peer-relative valuation screen, while price, Beta and
-        momentum are calculated as-of the selected weekly date.
-        """
-    )
 
 
 # ============================================================
-# PAGE 3 — MARKET PULSE
+# MARKET PULSE
 # ============================================================
 
 elif page == "📈 Market Pulse":
@@ -2078,28 +2337,18 @@ elif page == "📈 Market Pulse":
 
     for label, ticker in indices.items():
 
-        series = clean_series(
+        series = price_series(
             ticker
         )
 
         if selected_date is not None:
 
-            price = price_on_or_before(
+            current = price_on_or_before(
                 ticker,
                 selected_date
             )
 
-        else:
-
-            price = (
-                series.iloc[-1]
-                if len(series)
-                else np.nan
-            )
-
-        if selected_date is not None:
-
-            previous = series[
+            previous_series = series[
                 series.index <
                 pd.Timestamp(
                     selected_date
@@ -2108,45 +2357,53 @@ elif page == "📈 Market Pulse":
 
         else:
 
-            previous = series
+            current = (
+                series.iloc[-1]
+                if not series.empty
+                else np.nan
+            )
 
-        previous_price = (
-            previous.iloc[-1]
-            if len(previous)
+            previous_series = series.iloc[:-1]
+
+        previous = (
+            previous_series.iloc[-1]
+            if not previous_series.empty
             else np.nan
         )
 
-        day_change = (
+        daily_change = (
 
-            price /
-            previous_price -
+            current /
+            previous -
             1
+
         ) * 100 if (
-            pd.notna(price)
+            pd.notna(current)
             and
-            pd.notna(previous_price)
+            pd.notna(previous)
             and
-            previous_price
+            previous != 0
         ) else np.nan
 
-        rows.append(
-            [
+        rows.append({
+
+            "Index":
                 label,
-                price,
-                day_change
-            ]
-        )
+
+            "Level":
+                current,
+
+            "Day Change %":
+                daily_change
+        })
 
     market = pd.DataFrame(
-        rows,
-        columns=[
-            "Index",
-            "Level",
-            "Day Change %"
-        ]
+        rows
     )
 
-    market["Level"] = market[
+    market[
+        "Level"
+    ] = market[
         "Level"
     ].map(
         lambda x:
@@ -2155,9 +2412,12 @@ elif page == "📈 Market Pulse":
         else "-"
     )
 
-    market["Day Change %"] = (
-        market["Day Change %"]
-        .map(pct)
+    market[
+        "Day Change %"
+    ] = market[
+        "Day Change %"
+    ].map(
+        format_pct
     )
 
     st.dataframe(
@@ -2167,39 +2427,37 @@ elif page == "📈 Market Pulse":
     )
 
     st.info(
-        """
-        Index levels are shown as points.
-        Market-data availability can vary by index and date.
-        """
+        "Index levels are points. "
+        "Yahoo Finance availability can vary by index."
     )
 
 
 # ============================================================
-# PAGE 4 — STOCK ANALYSIS
+# STOCK ANALYSIS
 # ============================================================
 
 elif page == "🔎 Stock Analysis":
 
     st.header(
-        "🔎 Stock / Company Analysis"
+        "🔎 Stock Analysis"
     )
 
     ticker = st.selectbox(
-        "Company / Ticker",
+        "Company",
         sorted(companies),
         format_func=lambda x:
-        f"{name(x)} ({x})"
+        f"{company_name(x)} ({x})"
     )
 
-    series = clean_series(
+    series = price_series(
         ticker
     )
 
-    fundamentals = info(
+    fundamentals = get_info(
         ticker
     )
 
-    price = selected_price(
+    current = selected_price(
         ticker,
         selected_date
     )
@@ -2207,142 +2465,148 @@ elif page == "🔎 Stock Analysis":
     if series.empty:
 
         st.warning(
-            "History unavailable."
+            "Price history is unavailable."
         )
 
-        st.stop()
+    else:
 
-    if selected_date is not None:
+        if selected_date is not None:
 
-        series = series[
-            series.index <=
+            series = series[
+                series.index <=
+                selected_date
+            ]
+
+        daily_change = (
+
+            series.iloc[-1] /
+            series.iloc[-2] -
+            1
+
+        ) * 100 if len(series) > 1 else np.nan
+
+        pe = fundamentals.get(
+            "trailingPE"
+        )
+
+        pb = fundamentals.get(
+            "priceToBook"
+        )
+
+        eps = fundamentals.get(
+            "trailingEps"
+        )
+
+        roe = fundamentals.get(
+            "returnOnEquity"
+        )
+
+        debt_equity = fundamentals.get(
+            "debtToEquity"
+        )
+
+        beta = calculate_beta(
+            ticker,
             selected_date
-        ]
+        )
 
-    day_change = (
+        k = st.columns(
+            6
+        )
 
-        series.iloc[-1] /
-        series.iloc[-2] -
-        1
+        k[0].metric(
+            "Price",
+            format_inr(current)
+        )
 
-    ) * 100 if len(series) > 1 else np.nan
+        k[1].metric(
+            "Day Change",
+            format_pct(daily_change)
+        )
 
-    pe = fundamentals.get(
-        "trailingPE"
-    )
-
-    pb = fundamentals.get(
-        "priceToBook"
-    )
-
-    eps = fundamentals.get(
-        "trailingEps"
-    )
-
-    roe = fundamentals.get(
-        "returnOnEquity"
-    )
-
-    debt_equity = fundamentals.get(
-        "debtToEquity"
-    )
-
-    beta = beta_at(
-        ticker,
-        selected_date
-    )
-
-    metrics = st.columns(6)
-
-    metrics[0].metric(
-        "Price",
-        inr(price)
-    )
-
-    metrics[1].metric(
-        "Day Change",
-        pct(day_change)
-    )
-
-    metrics[2].metric(
-        "P/E",
-        f"{pe:.2f}x"
-        if pd.notna(pe)
-        else "N/A"
-    )
-
-    metrics[3].metric(
-        "Beta",
-        f"{beta:.2f}"
-        if pd.notna(beta)
-        else "N/A"
-    )
-
-    metrics[4].metric(
-        "P/B",
-        f"{pb:.2f}"
-        if pd.notna(pb)
-        else "N/A"
-    )
-
-    metrics[5].metric(
-        "ROE",
-        f"{roe*100:.1f}%"
-        if pd.notna(roe)
-        else "N/A"
-    )
-
-    st.write(
-        f"""
-        **{name(ticker)}**
-
-        Sector:
-        **{sector(ticker)}**
-
-        Peer Group:
-        **{peer(ticker)}**
-        """
-    )
-
-    st.plotly_chart(
-        px.line(
-            series,
-            title=
-            f"{name(ticker)} — Price History"
-        ),
-        use_container_width=True
-    )
-
-    fundamental_table = pd.DataFrame({
-
-        "Metric": [
+        k[2].metric(
             "P/E",
+            f"{pe:.2f}x"
+            if pd.notna(pe)
+            else "N/A"
+        )
+
+        k[3].metric(
+            "Beta",
+            f"{beta:.2f}"
+            if pd.notna(beta)
+            else "N/A"
+        )
+
+        k[4].metric(
             "P/B",
-            "EPS",
+            f"{pb:.2f}"
+            if pd.notna(pb)
+            else "N/A"
+        )
+
+        k[5].metric(
             "ROE",
-            "Debt / Equity",
-            "Beta"
-        ],
+            f"{roe*100:.1f}%"
+            if pd.notna(roe)
+            else "N/A"
+        )
 
-        "Value": [
-            pe,
-            pb,
-            eps,
-            roe,
-            debt_equity,
-            beta
-        ]
-    })
+        st.write(
+            f"""
+            **{company_name(ticker)}**
 
-    st.dataframe(
-        fundamental_table,
-        hide_index=True,
-        use_container_width=True
-    )
+            Sector:
+            **{company_sector(ticker)}**
+
+            Peer Group:
+            **{company_peer(ticker)}**
+            """
+        )
+
+        fig = px.line(
+            series,
+            title=(
+                f"{company_name(ticker)} "
+                "— Price History"
+            )
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+        fundamental_data = pd.DataFrame({
+
+            "Metric": [
+                "P/E",
+                "P/B",
+                "EPS",
+                "ROE",
+                "Debt / Equity",
+                "Beta"
+            ],
+
+            "Value": [
+                pe,
+                pb,
+                eps,
+                roe,
+                debt_equity,
+                beta
+            ]
+        })
+
+        st.dataframe(
+            fundamental_data,
+            hide_index=True,
+            use_container_width=True
+        )
 
 
 # ============================================================
-# PAGE 5 — WATCHLIST
+# WATCHLIST
 # ============================================================
 
 elif page == "⭐ Watchlist":
@@ -2353,8 +2617,10 @@ elif page == "⭐ Watchlist":
 
     available = sorted(
         set(
-            companies +
-            DEFAULT_COMPANIES +
+            companies
+            +
+            DEFAULT_COMPANIES
+            +
             st.session_state.watchlist
         )
     )
@@ -2363,10 +2629,12 @@ elif page == "⭐ Watchlist":
         "Company",
         available,
         format_func=lambda x:
-        name(x)
+        company_name(x)
     )
 
-    c1, c2 = st.columns(2)
+    c1, c2 = st.columns(
+        2
+    )
 
     with c1:
 
@@ -2410,11 +2678,11 @@ elif page == "⭐ Watchlist":
             st.session_state.watchlist
         ):
 
-            price = latest_price(
+            current = latest_price(
                 ticker
             )
 
-            fundamentals = info(
+            fundamentals = get_info(
                 ticker
             )
 
@@ -2426,21 +2694,26 @@ elif page == "⭐ Watchlist":
 
             status = (
                 "🟢 Target reached"
-                if target
-                and price <= target
+                if (
+                    target
+                    and
+                    pd.notna(current)
+                    and
+                    current <= target
+                )
                 else "🟡 Watch"
             )
 
             rows.append({
 
                 "Company":
-                    name(ticker),
+                    company_name(ticker),
 
                 "Ticker":
                     ticker,
 
                 "Price":
-                    price,
+                    current,
 
                 "P/E":
                     fundamentals.get(
@@ -2454,24 +2727,28 @@ elif page == "⭐ Watchlist":
                     status
             })
 
-        watchlist_table = pd.DataFrame(
+        watchlist = pd.DataFrame(
             rows
         )
 
-        watchlist_table["Price"] = (
-            watchlist_table[
-                "Price"
-            ].map(inr)
+        watchlist[
+            "Price"
+        ] = watchlist[
+            "Price"
+        ].map(
+            format_inr
         )
 
-        watchlist_table[
+        watchlist[
             "Target Price"
-        ] = watchlist_table[
+        ] = watchlist[
             "Target Price"
-        ].map(inr)
+        ].map(
+            format_inr
+        )
 
         st.dataframe(
-            watchlist_table,
+            watchlist,
             hide_index=True,
             use_container_width=True
         )
@@ -2480,13 +2757,21 @@ elif page == "⭐ Watchlist":
         "Set Target Price"
     )
 
+    current_target = (
+        st.session_state
+        .target_prices
+        .get(
+            ticker,
+            0.0
+        )
+    )
+
     target = st.number_input(
         "Target Price",
         min_value=0.0,
         value=float(
-            st.session_state
-            .target_prices
-            .get(ticker, 0.0)
+            current_target
+            or 0.0
         )
     )
 
@@ -2508,7 +2793,7 @@ elif page == "⭐ Watchlist":
 
 
 # ============================================================
-# PAGE 6 — MY PORTFOLIO
+# MY PORTFOLIO
 # ============================================================
 
 elif page == "💼 My Portfolio":
@@ -2517,14 +2802,19 @@ elif page == "💼 My Portfolio":
         "💼 My Portfolio"
     )
 
-    display = portfolio.copy()
+    if portfolio.empty:
 
-    if len(display):
-
-        display["Weight"] = (
-            display["Weight"] *
-            100
+        st.info(
+            "Portfolio data unavailable."
         )
+
+    else:
+
+        display = portfolio.copy()
+
+        display[
+            "Weight"
+        ] *= 100
 
         for column in [
             "Allocated",
@@ -2534,9 +2824,12 @@ elif page == "💼 My Portfolio":
             "P/L"
         ]:
 
-            display[column] = (
-                display[column]
-                .map(inr)
+            display[
+                column
+            ] = display[
+                column
+            ].map(
+                format_inr
             )
 
         display = display.rename(
@@ -2546,13 +2839,11 @@ elif page == "💼 My Portfolio":
             }
         )
 
-    st.dataframe(
-        display,
-        hide_index=True,
-        use_container_width=True
-    )
-
-    if len(portfolio):
+        st.dataframe(
+            display,
+            hide_index=True,
+            use_container_width=True
+        )
 
         st.subheader(
             "Contributors / Detractors"
@@ -2572,9 +2863,12 @@ elif page == "💼 My Portfolio":
             .copy()
         )
 
-        contributors["P/L"] = (
-            contributors["P/L"]
-            .map(inr)
+        contributors[
+            "P/L"
+        ] = contributors[
+            "P/L"
+        ].map(
+            format_inr
         )
 
         st.dataframe(
@@ -2585,7 +2879,7 @@ elif page == "💼 My Portfolio":
 
 
 # ============================================================
-# PAGE 7 — PORTFOLIO BUILDER
+# PORTFOLIO BUILDER
 # ============================================================
 
 elif page == "🧩 Portfolio Builder":
@@ -2595,16 +2889,13 @@ elif page == "🧩 Portfolio Builder":
     )
 
     st.caption(
-        """
-        Add or delete companies.
-        Whole-share allocation retains unused cash.
-        """
+        "Add or delete companies. "
+        "Whole-share allocation retains unused cash."
     )
 
     ticker_input = st.text_input(
-        "Add NSE ticker",
-        placeholder=
-        "e.g. TCS or RELIANCE.NS"
+        "Add NSE Ticker",
+        placeholder="e.g. TCS or RELIANCE.NS"
     ).strip().upper()
 
     if st.button(
@@ -2613,15 +2904,17 @@ elif page == "🧩 Portfolio Builder":
 
         ticker = (
             ticker_input
-            if ticker_input.endswith(".NS")
+            if ticker_input.endswith(
+                ".NS"
+            )
             else ticker_input + ".NS"
         )
 
-        test_series = clean_series(
+        validation = price_series(
             ticker
         )
 
-        if test_series.empty:
+        if validation.empty:
 
             st.error(
                 "Ticker could not be validated through Yahoo Finance."
@@ -2633,7 +2926,10 @@ elif page == "🧩 Portfolio Builder":
 
             META.setdefault(
                 ticker,
-                (ticker, "Other")
+                (
+                    ticker,
+                    "Other"
+                )
             )
 
             PEER_GROUP.setdefault(
@@ -2650,10 +2946,10 @@ elif page == "🧩 Portfolio Builder":
     if companies:
 
         delete_ticker = st.selectbox(
-            "Delete company",
+            "Delete Company",
             companies,
             format_func=lambda x:
-            name(x)
+            company_name(x)
         )
 
         if st.button(
@@ -2668,39 +2964,45 @@ elif page == "🧩 Portfolio Builder":
 
                 st.rerun()
 
-    builder_table = pd.DataFrame({
+            else:
+
+                st.warning(
+                    "At least one company must remain."
+                )
+
+    builder = pd.DataFrame({
 
         "Ticker":
             companies,
 
         "Company":
             [
-                name(x)
+                company_name(x)
                 for x in companies
             ],
 
         "Sector":
             [
-                sector(x)
+                company_sector(x)
                 for x in companies
             ],
 
         "Peer Group":
             [
-                peer(x)
+                company_peer(x)
                 for x in companies
             ]
     })
 
     st.dataframe(
-        builder_table,
+        builder,
         hide_index=True,
         use_container_width=True
     )
 
 
 # ============================================================
-# PAGE 8 — RISK & PERFORMANCE
+# RISK & PERFORMANCE
 # ============================================================
 
 elif page == "⚠️ Risk & Performance":
@@ -2709,75 +3011,92 @@ elif page == "⚠️ Risk & Performance":
         "⚠️ Risk & Performance"
     )
 
-    returns = (
-        portfolio_history
-        .pct_change()
-        .dropna()
-    )
+    if portfolio_history.empty:
 
-    volatility = (
-        returns.std() *
-        sqrt(252)
-        if len(returns) > 1
-        else np.nan
-    )
+        st.warning(
+            "Performance data unavailable."
+        )
 
-    drawdown = (
+    else:
 
-        portfolio_history /
-        portfolio_history.cummax() -
-        1
+        returns = (
+            portfolio_history
+            .pct_change()
+            .dropna()
+        )
 
-    ).min() if len(
-        portfolio_history
-    ) else np.nan
-
-    metrics = st.columns(4)
-
-    metrics[0].metric(
-        "Volatility",
-        f"{volatility*100:.2f}%"
-        if pd.notna(volatility)
-        else "N/A"
-    )
-
-    metrics[1].metric(
-        "Maximum Drawdown",
-        f"{drawdown*100:.2f}%"
-        if pd.notna(drawdown)
-        else "N/A"
-    )
-
-    metrics[2].metric(
-        "Portfolio Return",
-        pct(portfolio_return)
-    )
-
-    metrics[3].metric(
-        "Benchmark Return",
-        pct(benchmark_return)
-    )
-
-    if len(portfolio_history):
+        volatility = (
+            returns.std()
+            *
+            sqrt(252)
+            if len(returns) > 1
+            else np.nan
+        )
 
         drawdown_series = (
-            portfolio_history /
-            portfolio_history.cummax() -
+            portfolio_history
+            /
+            portfolio_history.cummax()
+            -
             1
         )
 
+        maximum_drawdown = (
+            drawdown_series.min()
+        )
+
+        k = st.columns(
+            4
+        )
+
+        k[0].metric(
+            "Annualized Volatility",
+            (
+                f"{volatility*100:.2f}%"
+                if pd.notna(volatility)
+                else "N/A"
+            )
+        )
+
+        k[1].metric(
+            "Maximum Drawdown",
+            (
+                f"{maximum_drawdown*100:.2f}%"
+                if pd.notna(
+                    maximum_drawdown
+                )
+                else "N/A"
+            )
+        )
+
+        k[2].metric(
+            "Portfolio Return",
+            format_pct(
+                portfolio_return
+            )
+        )
+
+        k[3].metric(
+            "Benchmark Return",
+            format_pct(
+                benchmark_return
+            )
+        )
+
+        fig = px.line(
+            x=drawdown_series.index,
+            y=drawdown_series.values,
+            title="Portfolio Drawdown"
+        )
+
         st.plotly_chart(
-            px.line(
-                x=drawdown_series.index,
-                y=drawdown_series.values,
-                title="Portfolio Drawdown"
-            ),
+            fig,
             use_container_width=True
         )
 
 
 # ============================================================
-# PAGE 9 — DEBT ANALYSIS
+# DEBT ANALYSIS
 # ============================================================
 
 elif page == "🏦 Debt Analysis":
@@ -2786,9 +3105,11 @@ elif page == "🏦 Debt Analysis":
         "🏦 Debt / Fixed Income Analysis"
     )
 
-    c = st.columns(4)
+    c = st.columns(
+        4
+    )
 
-    instrument = c[0].text_input(
+    c[0].text_input(
         "Instrument",
         "Custom Bond"
     )
@@ -2796,10 +3117,10 @@ elif page == "🏦 Debt Analysis":
     face_value = c[1].number_input(
         "Investment / Face Value",
         min_value=0.0,
-        value=1_00_000.0
+        value=100000.0
     )
 
-    coupon = c[2].number_input(
+    coupon_rate = c[2].number_input(
         "Coupon %",
         min_value=0.0,
         value=7.0
@@ -2807,41 +3128,54 @@ elif page == "🏦 Debt Analysis":
 
     maturity = c[3].date_input(
         "Maturity",
-        date(2029, 9, 1)
+        date(
+            2029,
+            9,
+            1
+        )
     )
 
-    years = max(
+    years_to_maturity = max(
         0,
         (
-            pd.Timestamp(maturity) -
+            pd.Timestamp(
+                maturity
+            )
+            -
             pd.Timestamp.today().normalize()
         ).days / 365
     )
 
-    d1, d2, d3 = st.columns(3)
+    k = st.columns(
+        3
+    )
 
-    d1.metric(
+    k[0].metric(
         "Annual Coupon",
-        inr(
-            face_value *
-            coupon /
+        format_inr(
+            face_value
+            *
+            coupon_rate
+            /
             100
         )
     )
 
-    d2.metric(
+    k[1].metric(
         "Maturity Value",
-        inr(face_value)
+        format_inr(
+            face_value
+        )
     )
 
-    d3.metric(
+    k[2].metric(
         "Years to Maturity",
-        f"{years:.2f}"
+        f"{years_to_maturity:.2f}"
     )
 
 
 # ============================================================
-# PAGE 10 — GOALS
+# GOALS
 # ============================================================
 
 elif page == "🎯 Goals":
@@ -2850,38 +3184,47 @@ elif page == "🎯 Goals":
         "🎯 Investment Goals"
     )
 
-    c = st.columns(4)
+    c = st.columns(
+        4
+    )
 
     target_amount = c[0].number_input(
         "Target Amount",
         min_value=0.0,
-        value=2_00_00_000.0
+        value=20000000.0
     )
 
     horizon = c[1].number_input(
-        "Horizon (years)",
+        "Horizon (Years)",
         min_value=0.1,
         value=3.0
     )
 
-    monthly = c[2].number_input(
+    monthly_contribution = c[2].number_input(
         "Monthly Contribution",
         min_value=0.0,
         value=0.0
     )
 
-    expected_return = c[3].number_input(
-        "Expected Return %",
-        min_value=0.0,
-        value=12.0
-    ) / 100
+    expected_return = (
+        c[3].number_input(
+            "Expected Return %",
+            min_value=0.0,
+            value=12.0
+        )
+        /
+        100
+    )
 
     projected = (
-        current_value *
+        current_value
+        *
         (
             1 +
             expected_return
-        ) ** horizon
+        )
+        **
+        horizon
     )
 
     shortfall = (
@@ -2894,40 +3237,54 @@ elif page == "🎯 Goals":
         (
             target_amount /
             current_value
-        ) ** (
+        )
+        **
+        (
             1 /
             horizon
-        ) - 1
+        )
+        -
+        1
 
     ) if current_value > 0 else np.nan
 
-    metrics = st.columns(4)
+    k = st.columns(
+        4
+    )
 
-    metrics[0].metric(
+    k[0].metric(
         "Current Corpus",
-        inr(current_value)
+        format_inr(
+            current_value
+        )
     )
 
-    metrics[1].metric(
+    k[1].metric(
         "Projected Corpus",
-        inr(projected)
+        format_inr(
+            projected
+        )
     )
 
-    metrics[2].metric(
+    k[2].metric(
         "Shortfall / Surplus",
-        inr(shortfall)
+        format_inr(
+            shortfall
+        )
     )
 
-    metrics[3].metric(
+    k[3].metric(
         "Required CAGR",
-        f"{required_cagr*100:.2f}%"
-        if pd.notna(required_cagr)
-        else "N/A"
+        (
+            f"{required_cagr*100:.2f}%"
+            if pd.notna(required_cagr)
+            else "N/A"
+        )
     )
 
 
 # ============================================================
-# PAGE 11 — ALERTS
+# ALERTS
 # ============================================================
 
 elif page == "🔔 Alerts":
@@ -2940,7 +3297,7 @@ elif page == "🔔 Alerts":
 
     for ticker in companies:
 
-        price = latest_price(
+        current = latest_price(
             ticker
         )
 
@@ -2955,10 +3312,10 @@ elif page == "🔔 Alerts":
             rows.append({
 
                 "Company":
-                    name(ticker),
+                    company_name(ticker),
 
                 "Price":
-                    price,
+                    current,
 
                 "Target":
                     target,
@@ -2966,7 +3323,11 @@ elif page == "🔔 Alerts":
                 "Status":
                     (
                         "🟢 At / below target"
-                        if price <= target
+                        if (
+                            pd.notna(current)
+                            and
+                            current <= target
+                        )
                         else
                         "🔴 Above target"
                     )
@@ -2978,14 +3339,20 @@ elif page == "🔔 Alerts":
             rows
         )
 
-        alerts["Price"] = (
-            alerts["Price"]
-            .map(inr)
+        alerts[
+            "Price"
+        ] = alerts[
+            "Price"
+        ].map(
+            format_inr
         )
 
-        alerts["Target"] = (
-            alerts["Target"]
-            .map(inr)
+        alerts[
+            "Target"
+        ] = alerts[
+            "Target"
+        ].map(
+            format_inr
         )
 
         st.dataframe(
@@ -3002,7 +3369,7 @@ elif page == "🔔 Alerts":
 
 
 # ============================================================
-# PAGE 12 — NEWS & EVENTS
+# NEWS & EVENTS
 # ============================================================
 
 elif page == "📰 News & Events":
@@ -3015,23 +3382,25 @@ elif page == "📰 News & Events":
         "Company",
         companies,
         format_func=lambda x:
-        name(x)
+        company_name(x)
     )
 
     st.info(
         f"""
         Selected company:
-        **{name(ticker)}**
+
+        **{company_name(ticker)}**
 
         Live news/corporate-event aggregation
         requires a dedicated news provider/API.
+
         ALPHA does not fabricate headlines.
         """
     )
 
     st.write(
         """
-        Suggested event categories:
+        Event categories supported by the dashboard framework:
 
         • Earnings
 
@@ -3049,7 +3418,7 @@ elif page == "📰 News & Events":
 
 
 # ============================================================
-# PAGE 13 — COMPARISON
+# COMPARISON
 # ============================================================
 
 elif page == "📊 Comparison":
@@ -3059,28 +3428,30 @@ elif page == "📊 Comparison":
     )
 
     chosen = st.multiselect(
-        "Select companies",
+        "Select Companies",
         companies,
-        default=companies[:5],
+        default=companies[
+            :min(5, len(companies))
+        ],
         format_func=lambda x:
-        name(x)
+        company_name(x)
     )
 
     rows = []
 
     for ticker in chosen:
 
-        fundamentals = info(
+        fundamentals = get_info(
             ticker
         )
 
         rows.append({
 
             "Company":
-                name(ticker),
+                company_name(ticker),
 
             "Sector":
-                sector(ticker),
+                company_sector(ticker),
 
             "Price":
                 selected_price(
@@ -3109,13 +3480,13 @@ elif page == "📊 Comparison":
                 ),
 
             "Beta":
-                beta_at(
+                calculate_beta(
                     ticker,
                     selected_date
                 ),
 
             "6M Return":
-                return_at(
+                calculate_return(
                     ticker,
                     selected_date,
                     126
@@ -3128,29 +3499,34 @@ elif page == "📊 Comparison":
             rows
         )
 
-        comparison["Price"] = (
-            comparison["Price"]
-            .map(inr)
+        comparison[
+            "Price"
+        ] = comparison[
+            "Price"
+        ].map(
+            format_inr
         )
 
-        comparison["ROE"] = (
-            comparison["ROE"]
-            .map(
-                lambda x:
-                f"{x*100:.2f}%"
-                if pd.notna(x)
-                else "-"
-            )
+        comparison[
+            "ROE"
+        ] = comparison[
+            "ROE"
+        ].map(
+            lambda x:
+            f"{x*100:.2f}%"
+            if pd.notna(x)
+            else "-"
         )
 
-        comparison["6M Return"] = (
-            comparison["6M Return"]
-            .map(
-                lambda x:
-                f"{x*100:.2f}%"
-                if pd.notna(x)
-                else "-"
-            )
+        comparison[
+            "6M Return"
+        ] = comparison[
+            "6M Return"
+        ].map(
+            lambda x:
+            f"{x*100:.2f}%"
+            if pd.notna(x)
+            else "-"
         )
 
         st.dataframe(
@@ -3161,7 +3537,7 @@ elif page == "📊 Comparison":
 
 
 # ============================================================
-# PAGE 14 — ADVANCED ANALYTICS
+# ADVANCED ANALYTICS
 # ============================================================
 
 elif page == "📐 Advanced Analytics":
@@ -3172,30 +3548,37 @@ elif page == "📐 Advanced Analytics":
 
     risk_free_rate = (
         st.number_input(
-            "Risk-free rate %",
+            "Risk-Free Rate %",
             min_value=0.0,
             value=6.5
-        ) / 100
+        )
+        /
+        100
     )
 
     market_return = (
         st.number_input(
-            "Expected market return %",
+            "Expected Market Return %",
             value=12.0
-        ) / 100
+        )
+        /
+        100
     )
 
-    selected_beta = st.number_input(
+    beta = st.number_input(
         "Beta",
         value=1.0,
         step=0.05
     )
 
     capm_return = (
-        risk_free_rate +
-        selected_beta *
+        risk_free_rate
+        +
+        beta
+        *
         (
-            market_return -
+            market_return
+            -
             risk_free_rate
         )
     )
@@ -3208,7 +3591,8 @@ elif page == "📐 Advanced Analytics":
     st.info(
         """
         CAPM is used as an analytical framework.
-        ALPHA's Strategy Engine separately applies
+
+        ALPHA's Strategy Engine separately uses
         Beta-weighted risk screening and peer-relative
         valuation.
         """
@@ -3216,7 +3600,7 @@ elif page == "📐 Advanced Analytics":
 
 
 # ============================================================
-# PAGE 15 — SETTINGS / METHODOLOGY
+# SETTINGS / METHODOLOGY
 # ============================================================
 
 elif page == "⚙️ Settings / Methodology":
@@ -3250,13 +3634,19 @@ elif page == "⚙️ Settings / Methodology":
 
         "Company":
             [
-                name(x)
+                company_name(x)
+                for x in DEFAULT_COMPANIES
+            ],
+
+        "Sector":
+            [
+                company_sector(x)
                 for x in DEFAULT_COMPANIES
             ],
 
         "Peer Group":
             [
-                peer(x)
+                company_peer(x)
                 for x in DEFAULT_COMPANIES
             ]
     })
@@ -3275,7 +3665,7 @@ elif page == "⚙️ Settings / Methodology":
         """
         ### 1. Investor Persona
 
-        ALPHA provides three investor profiles:
+        ALPHA provides:
 
         **Conservative**
         - 40% valuation
@@ -3298,77 +3688,65 @@ elif page == "⚙️ Settings / Methodology":
 
         ### 2. Peer-Relative P/E
 
-        ALPHA calculates:
+        Relative P/E is calculated as:
 
-        **Relative P/E =
-        Company P/E ÷ Peer Group Median P/E**
+        **Company P/E ÷ Peer Group Median P/E**
 
-        A value below 1.00x indicates that the
-        company's P/E is below its selected peer
-        median.
-
-        Lower relative P/E receives a higher
+        Lower Relative P/E receives a higher
         valuation score.
 
 
         ### 3. Beta-Weighted Risk Screening
 
-        Beta is calculated against the selected
-        benchmark using historical market returns.
+        Beta is calculated using historical stock
+        returns relative to the selected benchmark.
 
         Lower Beta receives a higher risk score.
-
-        The importance of this factor changes
-        according to the investor persona.
 
 
         ### 4. Momentum
 
-        ALPHA calculates 6-month price momentum.
-
-        Higher momentum receives a higher score.
+        ALPHA uses approximately six months of
+        historical price momentum.
 
 
         ### 5. Quality
 
         Return on Equity is used as a supporting
-        quality factor when available.
+        quality factor.
 
 
         ### 6. Strategy Score
 
-        The final score is:
+        The final score combines:
 
-        **Strategy Score =**
+        **Valuation + Risk + Momentum + Quality**
 
-        **Valuation Score × Persona Valuation Weight**
-
-        **+ Risk Score × Persona Risk Weight**
-
-        **+ Momentum Score × Persona Momentum Weight**
-
-        **+ Quality Score × Persona Quality Weight**
+        according to the selected investor persona.
 
 
         ### 7. Weekly Rebalancing
 
-        Every available weekly report date is treated
-        as a potential rebalancing point.
+        Each available weekly trading date is treated
+        as a rebalancing point.
 
         ALPHA:
 
         1. Screens the investment universe.
-        2. Calculates factor scores.
-        3. Ranks companies.
-        4. Selects the highest-ranked stocks.
-        5. Calculates new portfolio weights.
-        6. Applies persona-specific position limits.
-        7. Rebalances the portfolio for the next week.
+        2. Calculates peer-relative P/E.
+        3. Calculates Beta.
+        4. Calculates momentum.
+        5. Calculates quality.
+        6. Ranks stocks.
+        7. Selects stocks.
+        8. Calculates new portfolio weights.
+        9. Applies position limits.
+        10. Rebalances for the next week.
 
 
         ### 8. Explainability
 
-        The dashboard displays:
+        ALPHA displays:
 
         - P/E
         - Peer P/E
@@ -3376,32 +3754,30 @@ elif page == "⚙️ Settings / Methodology":
         - Beta
         - 6M return
         - ROE
-        - Strategy score
-        - Portfolio weight
+        - Strategy Score
+        - New portfolio weight
         - Selection status
-        - Reason for selection
+        - Selection reason
         """
     )
 
     st.subheader(
-        "Important Data Limitation"
+        "Data Limitation"
     )
 
     st.warning(
         """
-        Yahoo Finance does not reliably expose
-        point-in-time historical P/E for every
-        Indian stock.
+        Yahoo Finance does not reliably provide point-in-time
+        historical P/E data for every Indian stock.
 
-        Therefore ALPHA uses the latest available
-        P/E fields for the peer-relative valuation
-        screen, while price, Beta and momentum are
-        calculated as-of the selected weekly date.
+        Therefore ALPHA uses the latest available P/E field
+        for the peer-relative valuation screen.
 
-        This is deliberately disclosed instead of
-        fabricating historical P/E observations.
-        A paid point-in-time fundamentals provider
-        can replace this component later.
+        Price, Beta and momentum are calculated using the
+        selected historical date.
+
+        This limitation is explicitly disclosed instead
+        of fabricating historical fundamental data.
         """
     )
 
@@ -3411,9 +3787,9 @@ elif page == "⚙️ Settings / Methodology":
 
     st.caption(
         """
-        ALPHA is an educational and analytical
-        portfolio dashboard. Strategy scores,
-        rankings and projections are not investment
+        ALPHA is an educational and analytical portfolio
+        dashboard. Strategy scores, rankings, portfolio
+        weights and projected returns are not investment
         advice and do not guarantee future returns.
         """
     )
@@ -3426,9 +3802,7 @@ elif page == "⚙️ Settings / Methodology":
 st.divider()
 
 st.caption(
-    """
-    α ALPHA • Dynamic Portfolio Intelligence & Strategy
-    • Yahoo Finance data where available
-    • Educational / analytical use only
-    """
+    "α ALPHA • Dynamic Portfolio Intelligence & Strategy "
+    "• Yahoo Finance data where available "
+    "• Educational / analytical use only"
 )
